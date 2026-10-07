@@ -102,8 +102,8 @@ export function parseError(error) {
 /* ------------------------------------------------------------------- API */
 export const AuthAPI = {
   login: (email, password) => api.post('/api/auth/login', { email, password }).then((r) => r.data),
-  register: (username, email, password) =>
-    api.post('/api/auth/register', { username, email, password }).then((r) => r.data),
+  register: (firstname, lastname, username, email, password) =>
+    api.post('/api/auth/register', { firstname, lastname, username, email, password }).then((r) => r.data),
   logout: (refreshToken) =>
     api.post('/api/auth/logout', { refresh_token: refreshToken }).then((r) => r.data),
 };

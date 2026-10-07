@@ -3,7 +3,7 @@ import { AuthAPI, parseError } from '../api.js';
 
 export default function AuthPage({ onLoggedIn }) {
   const [mode, setMode] = useState('login'); // 'login' | 'register'
-  const [form, setForm] = useState({ username: '', email: '', password: '' });
+  const [form, setForm] = useState({ firstname: '', lastname: '', username: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [fields, setFields] = useState({});
@@ -25,15 +25,34 @@ export default function AuthPage({ onLoggedIn }) {
     setError('');
     setFields({});
     setInfo('');
+
+    if (!isLogin) {
+      const passwordLength = Array.from(form.password).length;
+      const passwordBytes = new TextEncoder().encode(form.password).length;
+      if (passwordLength < 8 || passwordBytes > 72) {
+        setFields({
+          password: 'Use at least 8 characters and no more than 72 bytes.',
+        });
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       if (isLogin) {
         const data = await AuthAPI.login(form.email.trim(), form.password);
         onLoggedIn(data);
       } else {
-        await AuthAPI.register(form.username.trim(), form.email.trim(), form.password);
+        await AuthAPI.register(
+          form.firstname.trim(),
+          form.lastname.trim(),
+          form.username.trim(),
+          form.email.trim(),
+          form.password
+        );
         setInfo('Account created! You can now log in.');
         setMode('login');
-        setForm({ username: '', email: form.email.trim(), password: '' });
+        setForm({ firstname: '', lastname: '', username: '', email: form.email.trim(), password: '' });
       }
     } catch (err) {
       const parsed = parseError(err);
@@ -54,11 +73,25 @@ export default function AuthPage({ onLoggedIn }) {
         {error && <div className="alert error">{error}</div>}
 
         {!isLogin && (
+          <>
+          <div className="row">
+            <label>
+              First name
+              <input value={form.firstname} onChange={update('firstname')} autoComplete="given-name" maxLength={100} required />
+              {fields.firstname && <span className="field-error">{fields.firstname}</span>}
+            </label>
+            <label>
+              Last name
+              <input value={form.lastname} onChange={update('lastname')} autoComplete="family-name" maxLength={100} required />
+              {fields.lastname && <span className="field-error">{fields.lastname}</span>}
+            </label>
+          </div>
           <label>
             Username
-            <input value={form.username} onChange={update('username')} autoComplete="username" required />
+            <input value={form.username} onChange={update('username')} autoComplete="username" minLength={3} maxLength={100} required />
             {fields.username && <span className="field-error">{fields.username}</span>}
           </label>
+          </>
         )}
 
         <label>
@@ -68,6 +101,7 @@ export default function AuthPage({ onLoggedIn }) {
             value={form.email}
             onChange={update('email')}
             autoComplete="email"
+            maxLength={255}
             required
           />
           {fields.email && <span className="field-error">{fields.email}</span>}
@@ -80,8 +114,14 @@ export default function AuthPage({ onLoggedIn }) {
             value={form.password}
             onChange={update('password')}
             autoComplete={isLogin ? 'current-password' : 'new-password'}
+            aria-describedby={!isLogin ? 'password-requirements' : undefined}
             required
           />
+          {!isLogin && (
+            <span id="password-requirements" className="muted">
+              Use at least 8 characters and no more than 72 bytes.
+            </span>
+          )}
           {fields.password && <span className="field-error">{fields.password}</span>}
         </label>
 

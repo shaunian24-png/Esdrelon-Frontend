@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AuthAPI, clearSession, loadSession, saveSession } from './api.js';
+import FlameBackground from './components/FlameBackground.jsx';
 import AuthPage from './components/AuthPage.jsx';
 import ProductsPage from './components/ProductsPage.jsx';
 
@@ -30,9 +31,16 @@ export default function App() {
     setSession(null);
   };
 
-  return session ? (
-    <ProductsPage user={session.user} onLogout={handleLogout} />
-  ) : (
-    <AuthPage onLoggedIn={handleLoggedIn} />
+  return (
+    <div className="app-shell">
+      <FlameBackground />
+      <div className="app-content">
+        {session ? (
+          <ProductsPage user={session.user} onLogout={handleLogout} />
+        ) : (
+          <AuthPage onLoggedIn={handleLoggedIn} />
+        )}
+      </div>
+    </div>
   );
 }
